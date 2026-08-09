@@ -19,13 +19,21 @@ func RunMigrations(dsn, migrationsPath string) error {
 	if err != nil {
 		return fmt.Errorf("open sql.DB for migrations: %w", err)
 	}
-	defer sqlDB.Close()
+	defer func() {
+		if cerr := sqlDB.Close(); cerr != nil {
+			log.Printf("close sql.DB: %v", cerr)
+		}
+	}()
 
 	driver, err := pgxmigrate.WithInstance(sqlDB, &pgxmigrate.Config{})
 	if err != nil {
 		return fmt.Errorf("create migrate driver: %w", err)
 	}
-	defer driver.Close()
+	defer func() {
+		if cerr := driver.Close(); cerr != nil {
+			log.Printf("close migrate driver: %v", cerr)
+		}
+	}()
 
 	m, err := migrate.NewWithDatabaseInstance(migrationsPath, "pgx5", driver)
 	if err != nil {

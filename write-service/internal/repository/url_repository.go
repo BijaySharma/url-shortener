@@ -11,14 +11,18 @@ import (
 
 type URLRepository interface {
 	// SaveURL saves the original URL and returns a unique short URL.
-	SaveURL(originalURL string) (string, error)
+	SaveURL(ctx context.Context, originalURL, shortURL string, expirationTime *time.Time) (string, error)
 
 	// GetOriginalURL retrieves the original URL for a given short URL.
-	GetOriginalURL(shortURL string) (string, error)
+	GetOriginalURL(ctx context.Context, shortURL string) (string, error)
 }
 
 type pgURLRepository struct {
 	db_pool *pgxpool.Pool
+}
+
+func NewURLRepository(db_pool *pgxpool.Pool) URLRepository {
+	return &pgURLRepository{db_pool: db_pool}
 }
 
 var ErrURLNotFound = errors.New("url not found")

@@ -8,6 +8,8 @@ import (
 
 	"github.com/BijaySharma/url-shortener/write-service/internal/db"
 	"github.com/BijaySharma/url-shortener/write-service/internal/handler"
+	"github.com/BijaySharma/url-shortener/write-service/internal/repository"
+	"github.com/BijaySharma/url-shortener/write-service/internal/service"
 	"github.com/jackc/pgx/v5/pgxpool"
 )
 
@@ -20,11 +22,11 @@ func init() {
 }
 
 func main() {
-	pool := setupDatabase(context.Background())
-	defer db.ClosePool(pool)
+	db_pool := setupDatabase(context.Background())
+	defer db.ClosePool(db_pool)
 
 	mux := http.NewServeMux()
-	registerHandlers(mux)
+	registerHandlers(mux, db_pool)
 
 	startServer(mux)
 }
@@ -59,8 +61,15 @@ func setupDatabase(ctx context.Context) *pgxpool.Pool {
 	return pool
 }
 
-func registerHandlers(mux *http.ServeMux) {
+func registerHandlers(mux *http.ServeMux, dbPool *pgxpool.Pool) {
 	mux.HandleFunc("/health", handler.HealthCheckHandler)
+
+	// Register the URL write handler
+	url_repo := repository.NewURLRepository(dbPool)
+	url_svc := service.NewURLWriteService(url_repo)
+	urlServiceHandlers := handler.NewURLServiceHandlers(url_svc)
+	mux.HandleFunc("/shorten", urlServiceHandlers.SaveURLHandler)
+	mux.HandleFunc("/expand", urlServiceHandlers.GetOriginalURLHandler)
 }
 
 func startServer(mux *http.ServeMux) {
