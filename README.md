@@ -2,6 +2,8 @@
 
 **This project is a work in progress.**
 
+> No AI is used in this project, it is built entirely by a human developer for educational purposes.
+
 This is a simple URL shortener application built with golang. It allows users to shorten long URLs and provides a unique short URL that redirects to the original URL.
 
 ## Overall Architecture

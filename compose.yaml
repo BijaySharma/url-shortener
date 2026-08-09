@@ -1,0 +1,26 @@
+services:
+  database: 
+    image: postgres:18-alpine
+    environment:
+      POSTGRES_USER: &url_shortener_user url_shortener_user
+      POSTGRES_PASSWORD: &url_shortener_password url_shortener_password
+      POSTGRES_DB: &url_shortener_db url_shortener
+    ports:
+      - "5432:5432"
+  cache:
+    image: redis:8.8-alpine
+  
+  write-service:
+    build: ./write-service
+    environment:
+      PORT: 8080
+      DB_USER: *url_shortener_user
+      DB_PASSWORD: *url_shortener_password
+      DB_NAME: *url_shortener_db
+      DB_HOST: database
+    depends_on:
+      - database
+      - cache
+    ports:
+      - "8080:8080"
+
