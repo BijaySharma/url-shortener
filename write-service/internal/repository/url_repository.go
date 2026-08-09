@@ -1,6 +1,13 @@
 package repository
 
-import "github.com/jackc/pgx/v5/pgxpool"
+import (
+	"context"
+	"errors"
+	"time"
+
+	"github.com/jackc/pgx/v5"
+	"github.com/jackc/pgx/v5/pgxpool"
+)
 
 type URLRepository interface {
 	// SaveURL saves the original URL and returns a unique short URL.
@@ -14,12 +21,28 @@ type pgURLRepository struct {
 	db_pool *pgxpool.Pool
 }
 
-func (r *pgURLRepository) SaveURL(originalURL string) (string, error) {
-	// Implementation for saving the original URL and returning a unique short URL.
-	return "", nil
+var ErrURLNotFound = errors.New("url not found")
+
+func (r *pgURLRepository) SaveURL(ctx context.Context, url, shortURL string, expirationTime *time.Time) (string, error) {
+	// Expiration time is optional; if nil, the URL will not expire.
+	query := `INSERT INTO urls (original_url, short_url, expiration_time) VALUES ($1, $2, $3) RETURNING short_url`
+	var returnedShortURL string
+	err := r.db_pool.QueryRow(ctx, query, url, shortURL, expirationTime).Scan(&returnedShortURL)
+	if err != nil {
+		return "", err
+	}
+	return returnedShortURL, nil
 }
 
-func (r *pgURLRepository) GetOriginalURL(shortURL string) (string, error) {
-	// Implementation for retrieving the original URL for a given short URL.
-	return "", nil
+func (r *pgURLRepository) GetOriginalURL(ctx context.Context, shortURL string) (string, error) {
+	query := `SELECT original_url FROM urls WHERE short_url = $1`
+	var originalURL string
+	err := r.db_pool.QueryRow(ctx, query, shortURL).Scan(&originalURL)
+	if err != nil {
+		if err == pgx.ErrNoRows {
+			return "", ErrURLNotFound
+		}
+		return "", err
+	}
+	return originalURL, nil
 }
