@@ -1,6 +1,6 @@
 # URL Shortener
 
-**This project is work in progress.**
+**This project is a work in progress.**
 
 This is a simple URL shortener application built with golang. It allows users to shorten long URLs and provides a unique short URL that redirects to the original URL.
 
