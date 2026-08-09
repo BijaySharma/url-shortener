@@ -23,7 +23,6 @@ func NewURLWriteService(repo repository.URLRepository) URLWriteService {
 }
 
 func (s *urlWriteService) SaveURL(ctx context.Context, originalURL string) (string, error) {
-	// Generate a unique short URL (this is a placeholder; implement your own logic).
 	shortURL := generateShortURL(originalURL)
 
 	// Save the original URL and the generated short URL in the repository.
@@ -36,5 +35,5 @@ func (s *urlWriteService) GetOriginalURL(ctx context.Context, shortURL string) (
 
 func generateShortURL(originalURL string) string {
 
-	return "short_" + originalURL // Placeholder logic; replace with actual short URL generation logic.
+	return "short_" + originalURL // TODO: Replace with actual short URL generation logic.
 }
