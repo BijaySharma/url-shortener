@@ -1,0 +1,14 @@
+#!/bin/sh
+# Run fmt/vet/lint on staged Go services before commit.
+
+set -e
+
+CHANGED=$(git diff --cached --name-only --diff-filter=ACM | grep '\.go$' || true)
+[ -z "$CHANGED" ] && exit 0
+
+for svc in write-service read-service; do
+	if echo "$CHANGED" | grep -q "^$svc/"; then
+		echo "==> linting $svc"
+		( cd "$svc" && make lint ) || exit 1
+	fi
+done
