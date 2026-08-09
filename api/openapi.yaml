@@ -1,0 +1,126 @@
+openapi: 3.0.3
+info:
+  title: URL Shortener
+  description: Combined API contract for the write-service (create) and read-service (redirect) components.
+  version: 0.1.0
+
+servers:
+  - url: http://localhost:8080
+    description: write-service
+  - url: http://localhost:8081
+    description: read-service
+
+tags:
+  - name: write-service
+    description: Handles URL shortening (creation).
+  - name: read-service
+    description: Handles short URL resolution (redirect) and lookup.
+
+paths:
+  /health:
+    get:
+      tags: [write-service]
+      summary: Health check
+      operationId: healthCheck
+      responses:
+        "200":
+          description: Service is healthy
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/HealthStatus"
+
+  /urls:
+    post:
+      tags: [write-service]
+      summary: Create a short URL for a given original URL
+      operationId: shortenURL
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/ShortenRequest"
+      responses:
+        "201":
+          description: Short URL created
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ShortenResponse"
+        "400":
+          description: Invalid request body
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+
+  /{code}:
+    get:
+      tags: [read-service]
+      summary: Resolve a short code and redirect to the original URL
+      operationId: redirectURL
+      parameters:
+        - name: code
+          in: path
+          required: true
+          schema:
+            type: string
+          example: aZ3xQ1
+      responses:
+        "302":
+          description: Redirect to the original URL
+          headers:
+            Location:
+              schema:
+                type: string
+                format: uri
+        "404":
+          description: Short code not found
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+
+components:
+  schemas:
+    HealthStatus:
+      type: object
+      properties:
+        status:
+          type: string
+          example: healthy
+
+    ShortenRequest:
+      type: object
+      required:
+        - url
+      properties:
+        url:
+          type: string
+          format: uri
+          example: https://example.com/some/long/path
+          description: The original URL to be shortened.
+        custom_alias:
+          type: string
+          example: my-custom-alias
+          description: Custom alias for the short URL, if not provided, a random code will be generated.
+        expiration_date:
+          type: string
+          format: date-time
+          example: 2024-12-31T23:59:59Z
+          description: Optional expiration date for the short URL. If not provided, the short URL will not expire.
+
+    ShortenResponse:
+      type: object
+      properties:
+        short_url:
+          type: string
+          example: http://localhost:8080/aZ3xQ1
+
+    Error:
+      type: object
+      properties:
+        message:
+          type: string
+          example: url is required
