@@ -16,7 +16,7 @@ graph LR
     Read["Read Service<br/>- look up original url in DB<br/>- return with 302 redirect"]
     Counter(("Global<br/>Counter"))
     DB(("Database<br/><br/>Urls<br/>- short url code (or custom alias)<br/>- original url<br/>- creationTime<br/>- expirationTime?<br/>- createdBy"))
-    Cache(("Cache<br/>(redis)<br/><br/>key: short_code<br/>value: original_url"))
+    Cache(("Cache<br/>(valkey)<br/><br/>key: short_code<br/>value: original_url"))
 
     Client <--> Gateway
     Gateway <--> Write
@@ -29,6 +29,8 @@ graph LR
     Counter -.->|"get latest count"| Write
 ```
 For detailed architecture information, please refer to the [Architecture](docs/architecture.md) document.
+
+Note: We are using [Valkey](https://valkey.io/) instead of Redis, since Valkey stays open-source (Redis moved to a non-OSS license).
 
 ## Core Features
 
@@ -65,6 +67,6 @@ For detailed architecture information, please refer to the [Architecture](docs/a
 |-----------|------------|
 | **Language** | [Golang](https://golang.org/) |
 | **Database** | [PostgreSQL](https://www.postgresql.org/) |
-| **Cache** | [Redis](https://redis.io/) |
+| **Cache** | [Valkey](https://valkey.io/) open-source Redis fork, adopted after Redis moved to a non-OSS license |
 
 Built with ❤️ by [Bijay Sharma](https://bijay.dev)

@@ -37,11 +37,20 @@ func (s *urlWriteService) GetOriginalURL(ctx context.Context, shortCode string) 
 	return s.url_repo.GetOriginalURL(ctx, shortCode)
 }
 
+// v1: This function generates a unique short code for the given original URL using a hash function and random salt.
+// v2: This uses redis global counter and sqids bijective function to generate short unique codes.
+
 func generateShortCode(originalUrl string) string {
+	// Approach 1: Use a hash function to generate a unique short code based on the original URL.
 	salt := make([]byte, 8)
 	rand.Read(salt) // Generate a random salt for uniqueness
 	ip := originalUrl + string(salt)
 	hash := sha256.Sum256([]byte(ip))
 	encoded := encoding.FromBytes(hash[:]).Base62Encode().ToString()
 	return encoded[:8]
+}
+
+func generateShortCode_v2() string {
+	// TODO
+	return ""
 }
