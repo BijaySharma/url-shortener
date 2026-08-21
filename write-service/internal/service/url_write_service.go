@@ -2,6 +2,11 @@ package service
 
 import (
 	"context"
+	"crypto/rand"
+	"crypto/sha256"
+	"fmt"
+
+	"github.com/deatil/go-encoding/encoding"
 
 	"github.com/BijaySharma/url-shortener/write-service/internal/repository"
 )
@@ -34,6 +39,14 @@ func (s *urlWriteService) GetOriginalURL(ctx context.Context, shortURL string) (
 }
 
 func generateShortURL(originalURL string) string {
+	salt := make([]byte, 8)
+	rand.Read(salt) // Generate a random salt for uniqueness
+	return fmt.Sprintf("localhost/%s", generateShortCode(originalURL, string(salt)))
+}
 
-	return "short_" + originalURL // TODO: Replace with actual short URL generation logic.
+func generateShortCode(originalUrl, salt string) string {
+	ip := originalUrl + salt
+	hash := sha256.Sum256([]byte(ip))
+	encoded := encoding.FromBytes(hash[:]).Base62Encode().ToString()
+	return encoded[:8]
 }
