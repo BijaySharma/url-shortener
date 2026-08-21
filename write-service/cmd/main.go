@@ -68,8 +68,8 @@ func registerHandlers(mux *http.ServeMux, dbPool *pgxpool.Pool) {
 	url_repo := repository.NewURLRepository(dbPool)
 	url_svc := service.NewURLWriteService(url_repo)
 	urlServiceHandlers := handler.NewURLServiceHandlers(url_svc)
-	mux.HandleFunc("/shorten", urlServiceHandlers.SaveURLHandler)
-	mux.HandleFunc("/expand", urlServiceHandlers.GetOriginalURLHandler)
+	mux.HandleFunc("POST /urls", urlServiceHandlers.SaveURLHandler)
+	mux.HandleFunc("GET /urls", urlServiceHandlers.GetOriginalURLHandler)
 }
 
 func startServer(mux *http.ServeMux) {

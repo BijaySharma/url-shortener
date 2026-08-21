@@ -4,7 +4,6 @@ import (
 	"context"
 	"crypto/rand"
 	"crypto/sha256"
-	"fmt"
 
 	"github.com/deatil/go-encoding/encoding"
 
@@ -16,7 +15,7 @@ type URLWriteService interface {
 	SaveURL(ctx context.Context, originalURL string) (string, error)
 
 	// GetOriginalURL retrieves the original URL for a given short URL.
-	GetOriginalURL(ctx context.Context, shortURL string) (string, error)
+	GetOriginalURL(ctx context.Context, shortCode string) (string, error)
 }
 
 type urlWriteService struct {
@@ -28,24 +27,20 @@ func NewURLWriteService(repo repository.URLRepository) URLWriteService {
 }
 
 func (s *urlWriteService) SaveURL(ctx context.Context, originalURL string) (string, error) {
-	shortURL := generateShortURL(originalURL)
+	shortCode := generateShortCode(originalURL)
 
 	// Save the original URL and the generated short URL in the repository.
-	return s.url_repo.SaveURL(ctx, originalURL, shortURL, nil)
+	return s.url_repo.SaveURL(ctx, originalURL, shortCode, nil)
 }
 
-func (s *urlWriteService) GetOriginalURL(ctx context.Context, shortURL string) (string, error) {
-	return s.url_repo.GetOriginalURL(ctx, shortURL)
+func (s *urlWriteService) GetOriginalURL(ctx context.Context, shortCode string) (string, error) {
+	return s.url_repo.GetOriginalURL(ctx, shortCode)
 }
 
-func generateShortURL(originalURL string) string {
+func generateShortCode(originalUrl string) string {
 	salt := make([]byte, 8)
 	rand.Read(salt) // Generate a random salt for uniqueness
-	return fmt.Sprintf("localhost/%s", generateShortCode(originalURL, string(salt)))
-}
-
-func generateShortCode(originalUrl, salt string) string {
-	ip := originalUrl + salt
+	ip := originalUrl + string(salt)
 	hash := sha256.Sum256([]byte(ip))
 	encoded := encoding.FromBytes(hash[:]).Base62Encode().ToString()
 	return encoded[:8]

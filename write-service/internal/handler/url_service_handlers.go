@@ -20,7 +20,7 @@ func NewURLServiceHandlers(svc service.URLWriteService) *URLServiceHandlers {
 func (h *URLServiceHandlers) SaveURLHandler(w http.ResponseWriter, r *http.Request) {
 	// Parse the request body to get the original URL.
 	var req struct {
-		OriginalURL    string     `json:"original_url"`
+		OriginalURL    string     `json:"url"`
 		CustomAlias    string     `json:"custom_alias,omitempty"`
 		ExpirationTime *time.Time `json:"expiration_time,omitempty"`
 	}
@@ -31,7 +31,7 @@ func (h *URLServiceHandlers) SaveURLHandler(w http.ResponseWriter, r *http.Reque
 	}
 
 	// Call the service to save the URL.
-	shortURL, err := h.svc.SaveURL(r.Context(), req.OriginalURL)
+	shortCode, err := h.svc.SaveURL(r.Context(), req.OriginalURL)
 	if err != nil {
 		http.Error(w, "Failed to save URL", http.StatusInternalServerError)
 		return
@@ -39,9 +39,9 @@ func (h *URLServiceHandlers) SaveURLHandler(w http.ResponseWriter, r *http.Reque
 
 	// Respond with the generated short URL.
 	resp := struct {
-		ShortURL string `json:"short_url"`
+		ShortCode string `json:"short_url"`
 	}{
-		ShortURL: shortURL,
+		ShortCode: shortCode,
 	}
 
 	w.Header().Set("Content-Type", "application/json")
@@ -53,17 +53,14 @@ func (h *URLServiceHandlers) SaveURLHandler(w http.ResponseWriter, r *http.Reque
 // This handler is not required but is added just for the sake of completeness. It allows retrieving the original URL from a short URL.
 func (h *URLServiceHandlers) GetOriginalURLHandler(w http.ResponseWriter, r *http.Request) {
 	// Extract the short URL from the query parameters.
-	req := struct {
-		ShortURL string `json:"short_url"`
-	}{}
-	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
-		http.Error(w, "Invalid request body", http.StatusBadRequest)
+	shortCode := r.URL.Query().Get("short_code")
+	if shortCode == "" {
+		http.Error(w, "Missing short_code query param", http.StatusBadRequest)
 		return
 	}
-	shortURL := req.ShortURL
 
 	// Call the service to get the original URL.
-	originalURL, err := h.svc.GetOriginalURL(r.Context(), shortURL)
+	originalURL, err := h.svc.GetOriginalURL(r.Context(), shortCode)
 	if err != nil {
 		http.Error(w, "Failed to retrieve original URL", http.StatusInternalServerError)
 		return
